@@ -15,13 +15,17 @@ class Game:
         self.board.append([0b00000000, 0b00000000, 0b00000000, 0b00000000])
         
         self.remaining_pieces = PIECES.keys()
+        self.remaining_pieces.pop(0)
+        
+        self.remaining_positions = [[0,1]]
         
         self.horizontal_win = False
         self.vertical_win = False
         self.diagonal_win = False
         
         self.players = []
-        self.current_player = 0
+        self.player_to_pick = 0
+        self.player_to_place = 1
         
     def add_player(self, player):
         self.players.append(player)
@@ -32,6 +36,10 @@ class Game:
         for i in self.board:
             y_pos += 1
             print str(y_pos) + PIECES[i[0]] + PIECES[i[1]] + PIECES[i[2]] + PIECES[i[3]]
+        print " "
+        remaining_pieces_string = ""
+        for i in self.remaining_pieces:
+            remaining_pieces_string += PIECES[i] + " "
         
     #winning checker, returns true if this state is a terminal state
     def terminal_state(self):
@@ -61,17 +69,54 @@ class Game:
             return True
         return False
     
+    def take_piece(self, piece_index):
+        if self.remaining_pieces[piece_index]:
+            self.remaining_pieces.pop(piece_index)
+            return True
+        return False
 
     def play(self):
         self.player_selection()
-        while(True):
+        print self.remaining_pieces
+        print PIECES.keys()
+        print self.players
+        while(len(self.remaining_pieces)>0):
+            piece_index = self.players[self.player_to_pick].select_piece()
+            piece = self.remaining_pieces[piece_index]
             
+            if not self.take_piece(piece_index):
+                print "Error: Player is an idiot"
+                continue
+            print "Player " +str(self.player_to_pick)+ " selects the piece " +PIECES[piece]
+            
+            self.print_board()
+            
+            position = self.players[self.player_to_place].select_position()
+            if not self.place_piece(position[0], position[1], piece):
+                print "Error: Player is an idiot: The position is taken!"
+                continue  
+            print "Player " +str(self.player_to_place)+ " places it in position " +str(position[0])+ "," +str(position[1])
+            self.print_board()
+            
+            #Check for a winner
             winning_position = self.terminal_state()
             if winning_position != False:
                 break
-            
-            
-            
+            #Swap the player indexes
+            temp = self.player_to_pick
+            self.player_to_pick = self.player_to_place
+            self.player_to_place = temp
+        
+        if self.remaining_pieces==0 and winning_position==False:
+            print "GAME OVER"
+            print "Draw"
+        else:
+            print "GAME OVER"
+            print "Winner: Player "+str(self.player_to_place+1)
+            print "Horizontal="+str(self.horizontal_win)+" Vertical="+str(self.vertical_win)+" Diagonal="+str(self.diagonal_win)
+            print "Line "+str(winning_position)
+                    
+               
         
     #prompts input from console to select level of players
     def player_selection(self):
@@ -133,7 +178,7 @@ class RandomPlayer(Player):
         self.game = game
         
     def select_piece(self):
-        return game.remaining_pieces[random.randrange(0, game.remaining_pieces)]
+        return random.randrange(0, len(game.remaining_pieces)+1)-1
         
     def select_position(self):
         return [random.randrange(0,4), random.randrange(0,4)]
@@ -218,15 +263,19 @@ PIECES = {
           }
                  
 if __name__ == "__main__":
+#    game = Game()
+#    
+#    game.place_piece(1, 4, 0b10101001)   
+#    game.place_piece(2, 3, 0b10100101)  
+#    game.place_piece(3, 2, 0b10010101)   
+#    game.place_piece(4, 1, 0b01101001)
+#    game.print_board()
+#    
+#    print game.terminal_state()
+#    
+#    game.player_selection()
+#    print game.players
+
     game = Game()
-    
-    game.place_piece(1, 4, 0b10101001)   
-    game.place_piece(2, 3, 0b10100101)  
-    game.place_piece(3, 2, 0b10010101)   
-    game.place_piece(4, 1, 0b01101001)
-    game.print_board()
-    
-    print game.terminal_state()
-    
-    game.player_selection()
-    print game.players
+    print game.remaining_positions
+#    game.play()
