@@ -10,7 +10,9 @@ class Game:
         self.board.append([0b00000000, 0b00000000, 0b00000000, 0b00000000])
         self.board.append([0b00000000, 0b00000000, 0b00000000, 0b00000000])
         self.board.append([0b00000000, 0b00000000, 0b00000000, 0b00000000])
-        
+        self.horizontal_win = False
+        self.vertical_win = False
+        self.diagonal_win = False
         
     def print_board(self):
         print "  1   2   3   4" #x pos
@@ -25,12 +27,19 @@ class Game:
             line = self.board[i]
             #check horizontal
             if (line[0] & line[1] & line[2] & line[3]) != 0:
+                self.horizontal_win = True
                 return self.board.index(line)+1
             #check vertical
             if (self.board[0][i] & self.board[1][i] & self.board[2][i] & self.board[3][i]) != 0:
+                self.vertical_win = True
                 return i+1
         #check diagonal lines!
-        
+        if (self.board[0][0] & self.board[1][1] & self.board[2][2] & self.board[3][3]) != 0:
+            diagonal_win = True
+            return 1
+        elif (self.board[0][3] & self.board[1][2] & self.board[2][1] & self.board[3][0]) != 0:
+            diagonal_win = True
+            return 4
         return False
             
     #takes in a position and a piece, as a bitstring, and places it on the board
@@ -64,10 +73,10 @@ PIECES = {
 if __name__ == "__main__":
     game = Game()
     
-    game.place_piece(1, 2, 0b10101001)   
-    game.place_piece(2, 2, 0b10100101)  
+    game.place_piece(1, 4, 0b10101001)   
+    game.place_piece(2, 3, 0b10100101)  
     game.place_piece(3, 2, 0b10010101)   
-    game.place_piece(4, 3, 0b01101001)
+    game.place_piece(4, 1, 0b01101001)
     game.print_board()
     
     print game.terminal_state()
