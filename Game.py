@@ -1,3 +1,5 @@
+            
+import random
 
 class Game:
     
@@ -18,8 +20,11 @@ class Game:
         self.vertical_win = False
         self.diagonal_win = False
         
-        self.current_player = 1
+        self.players = []
+        self.current_player = 0
         
+    def add_player(self, player):
+        self.players.append(player)
         
     def print_board(self):
         print "  1   2   3   4" #x pos
@@ -55,9 +60,48 @@ class Game:
             self.board[y-1][x-1] = piece
             return True
         return False
+    
+
+    def play(self):
+        self.player_selection()
+        while(True):
+            
+            winning_position = self.terminal_state()
+            if winning_position != False:
+                break
             
             
-import random
+            
+        
+    #prompts input from console to select level of players
+    def player_selection(self):
+        print "Select level of player 1:"
+        print "1: Randomizing Player. 2: Novice Player. 3: Minmax3 Player. 4: Minimax4 Player. 5: Human Player."
+        level = int(raw_input("-->"))
+        player1 = {
+                  1: RandomPlayer(self),
+                  2: NovicePlayer(self),
+                  3: Minimax3Player(self),
+                  4: Minimax4Player(self),
+                  5: HumanPlayer(self)
+                  }[level]
+        self.add_player(player1)
+        
+        print "Select level of player 2:"
+        print "1: Randomizing Player. 2: Novice Player. 3: Minmax3 Player. 4: Minimax4 Player. 5: Human Player."
+        level = int(raw_input("-->"))
+        player2 = {
+                  1: RandomPlayer(self),
+                  2: NovicePlayer(self),
+                  3: Minimax3Player(self),
+                  4: Minimax4Player(self),
+                  5: HumanPlayer(self)
+                  }[level]
+        self.add_player(player2)
+        
+        
+            
+
 
 class Player:
     #Abstract player class
@@ -77,6 +121,10 @@ class HumanPlayer(Player):
         
     def select_piece(self):
         return 0
+    
+    def select_position(self):
+        return Player.select_position(self)
+    
 
 class RandomPlayer(Player):
     #Plays randomly all the way!
@@ -85,31 +133,68 @@ class RandomPlayer(Player):
         self.game = game
         
     def select_piece(self):
-        pieces = PIECES.keys()
-        return pieces[random.randrange(0, pieces)]
+        return game.remaining_pieces[random.randrange(0, game.remaining_pieces)]
         
     def select_position(self):
-        
+        return [random.randrange(0,4), random.randrange(0,4)]
 
 class NovicePlayer(Player):
     #Plays randomly
     #Avoids selecting pieces which will give a win to opponent
     #Puts a piece if winning position if possible
+    def __init__(self, game):
+        Player.__init__(self, game)
+        
+    def select_piece(self):
+        return Player.select_piece(self)
+    
+    def select_position(self):
+        return Player.select_position(self)
+    
     
 class Minimax3Player(Player):
     #Searches through the tree of game states with a depth of 3
     #chooses winning move if possible
+    def __init__(self, game):
+        Player.__init__(self, game)
+        
+    def select_piece(self):
+        return Player.select_piece(self)
     
+    def select_position(self):
+        return Player.select_position(self)
+    
+ 
+   
 class Minimax4Player(Player):
     #Searches through the tree of game states with a depth of 4
     #chooses winning move if possible
     
+    def __init__(self, game):
+        Player.__init__(self, game)
+        
+    def select_piece(self):
+        return Player.select_piece(self)
+    
+    def select_position(self):
+        return Player.select_position(self)
+    
+    
+
 class MonteCarloPlayer(Player):
     #for each possible piece selection/placing given a game state:
     #simulates 1000k rounds of game
     #chooses the move which statistically has highest probability of winning
     
+    def __init__(self, game):
+        Player.__init__(self, game)
+        
+    def select_piece(self):
+        return Player.select_piece(self)
     
+    def select_position(self):
+        return Player.select_position(self)
+   
 
 #pieces unstarred.starred unbracketed.bracketed small.big red.blue
 PIECES = {
@@ -143,3 +228,5 @@ if __name__ == "__main__":
     
     print game.terminal_state()
     
+    game.player_selection()
+    print game.players
