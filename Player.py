@@ -2,7 +2,7 @@
 
 class RandomPlayer:
     #Plays randomly all the way!
-
+#Humpty Dumpty sat on a wall!
 
 class NovicePlayer:
     #Plays randomly
