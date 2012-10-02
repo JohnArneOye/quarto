@@ -37,6 +37,8 @@ class Game:
             y_pos += 1
             print str(y_pos) + PIECES[i[0]] + PIECES[i[1]] + PIECES[i[2]] + PIECES[i[3]]
         print " "
+        
+    def print_pieces(self):
         print "Remaining Pieces"
         a_string = ""
         for n in range(1,len(self.remaining_pieces)+1):
@@ -70,8 +72,8 @@ class Game:
             
     #takes in a position and a piece, as a bitstring, and places it on the board
     def place_piece(self, x, y, piece):
-        if self.board[y-1][x-1] == 0b00000000:
-            self.board[y-1][x-1] = piece
+        if self.board[y][x] == 0b00000000:
+            self.board[y][x] = piece
             return True
         return False
     
@@ -83,24 +85,25 @@ class Game:
 
     def play(self):
         self.player_selection()
+        self.print_board()
         while(len(self.remaining_pieces)>0):
             #Player 1 selects piece from the pool
+            self.print_pieces()
             piece_index = self.players[self.player_to_pick].select_piece()
             piece = self.remaining_pieces[piece_index]
             while not self.take_piece(piece_index):
                 print "Error: Player is an idiot: Piece does not exist!"
                 piece_index = self.players[self.player_to_pick].select_piece()
                 piece = self.remaining_pieces[piece_index]
-            print "Player " +str(self.player_to_pick)+ " selects the piece " +PIECES[piece]
+            print "Player " +str(self.player_to_pick+1)+ " selects the piece " +PIECES[piece]
             
             self.print_board()
-            
             #Player 2 selects where to put the piece
             position = self.players[self.player_to_place].select_position()
             while not self.place_piece(position[0], position[1], piece):
                 print "Error: Player is an idiot: The position is taken!"
                 position = self.players[self.player_to_place].select_position()
-            print "Player " +str(self.player_to_place)+ " places it in position " +str(position[0])+ "," +str(position[1])
+            print "Player " +str(self.player_to_place+1)+ " places it in position " +str(position[0]+1)+ "," +str(position[1]+1)
             self.print_board()
             
             #Check for a winner
@@ -124,7 +127,7 @@ class Game:
         print " "
         print "NEW GAME? (y/n)"
         if raw_input("-->") == 'y':
-            self.play()
+            Game().play()
                
         
     #prompts input from console to select level of players
@@ -185,7 +188,7 @@ class HumanPlayer(Player):
     
         print "Select y position for piece:"
         console_in2 = raw_input("-->")
-        return [int(console_in1), int(console_in2)]
+        return [int(console_in1)-1, int(console_in2)-1]
     
 
 class RandomPlayer(Player):
