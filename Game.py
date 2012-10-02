@@ -1,4 +1,4 @@
-            
+
 import random
 
 class Game:
@@ -17,7 +17,7 @@ class Game:
         self.remaining_pieces = PIECES.keys()
         self.remaining_pieces.pop(0)
         
-        self.remaining_positions = [[0,1]]
+#        self.remaining_positions = [[0,1]]
         
         self.horizontal_win = False
         self.vertical_win = False
@@ -37,9 +37,10 @@ class Game:
             y_pos += 1
             print str(y_pos) + PIECES[i[0]] + PIECES[i[1]] + PIECES[i[2]] + PIECES[i[3]]
         print " "
-        remaining_pieces_string = ""
+        remaining_pieces_string = " Pieces: "
         for i in self.remaining_pieces:
             remaining_pieces_string += PIECES[i] + " "
+        print remaining_pieces_string
         
     #winning checker, returns true if this state is a terminal state
     def terminal_state(self):
@@ -81,9 +82,9 @@ class Game:
         print PIECES.keys()
         print self.players
         while(len(self.remaining_pieces)>0):
+            #Player 1 selects piece from the pool
             piece_index = self.players[self.player_to_pick].select_piece()
             piece = self.remaining_pieces[piece_index]
-            
             if not self.take_piece(piece_index):
                 print "Error: Player is an idiot"
                 continue
@@ -91,13 +92,14 @@ class Game:
             
             self.print_board()
             
+            #Player 2 selects where to put the piece
             position = self.players[self.player_to_place].select_position()
-            if not self.place_piece(position[0], position[1], piece):
+            while not self.place_piece(position[0], position[1], piece):
                 print "Error: Player is an idiot: The position is taken!"
-                continue  
+                position = self.players[self.player_to_place].select_position()
             print "Player " +str(self.player_to_place)+ " places it in position " +str(position[0])+ "," +str(position[1])
             self.print_board()
-            
+            print self.remaining_pieces
             #Check for a winner
             winning_position = self.terminal_state()
             if winning_position != False:
@@ -107,7 +109,8 @@ class Game:
             self.player_to_pick = self.player_to_place
             self.player_to_place = temp
         
-        if self.remaining_pieces==0 and winning_position==False:
+        #End of game
+        if len(self.remaining_pieces)==0 and winning_position==False:
             print "GAME OVER"
             print "Draw"
         else:
@@ -115,7 +118,10 @@ class Game:
             print "Winner: Player "+str(self.player_to_place+1)
             print "Horizontal="+str(self.horizontal_win)+" Vertical="+str(self.vertical_win)+" Diagonal="+str(self.diagonal_win)
             print "Line "+str(winning_position)
-                    
+        print " "
+        print "NEW GAME? (y/n)"
+        if raw_input("-->") == 'y':
+            self.play()
                
         
     #prompts input from console to select level of players
@@ -277,5 +283,5 @@ if __name__ == "__main__":
 #    print game.players
 
     game = Game()
-    print game.remaining_positions
-#    game.play()
+#    print game.remaining_positions
+    game.play()
