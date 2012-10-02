@@ -37,9 +37,14 @@ class Game:
             y_pos += 1
             print str(y_pos) + PIECES[i[0]] + PIECES[i[1]] + PIECES[i[2]] + PIECES[i[3]]
         print " "
-        remaining_pieces_string = " Pieces: "
+        print "Remaining Pieces"
+        a_string = ""
+        for n in range(1,len(self.remaining_pieces)+1):
+            a_string += repr(n).rjust(5)
+        print a_string
+        remaining_pieces_string = "  "
         for i in self.remaining_pieces:
-            remaining_pieces_string += PIECES[i] + " "
+            remaining_pieces_string += str(PIECES[i]).rjust(5)
         print remaining_pieces_string
         
     #winning checker, returns true if this state is a terminal state
@@ -78,16 +83,14 @@ class Game:
 
     def play(self):
         self.player_selection()
-        print self.remaining_pieces
-        print PIECES.keys()
-        print self.players
         while(len(self.remaining_pieces)>0):
             #Player 1 selects piece from the pool
             piece_index = self.players[self.player_to_pick].select_piece()
             piece = self.remaining_pieces[piece_index]
-            if not self.take_piece(piece_index):
-                print "Error: Player is an idiot"
-                continue
+            while not self.take_piece(piece_index):
+                print "Error: Player is an idiot: Piece does not exist!"
+                piece_index = self.players[self.player_to_pick].select_piece()
+                piece = self.remaining_pieces[piece_index]
             print "Player " +str(self.player_to_pick)+ " selects the piece " +PIECES[piece]
             
             self.print_board()
@@ -99,7 +102,7 @@ class Game:
                 position = self.players[self.player_to_place].select_position()
             print "Player " +str(self.player_to_place)+ " places it in position " +str(position[0])+ "," +str(position[1])
             self.print_board()
-            print self.remaining_pieces
+            
             #Check for a winner
             winning_position = self.terminal_state()
             if winning_position != False:
@@ -171,10 +174,18 @@ class HumanPlayer(Player):
         self.game = game
         
     def select_piece(self):
-        return 0
+        print "Select piece nr.:"
+        console_in = raw_input("-->")
+        return int(console_in)-1
+            
     
     def select_position(self):
-        return Player.select_position(self)
+        print "Select x position for piece:"
+        console_in1 = raw_input("-->")
+    
+        print "Select y position for piece:"
+        console_in2 = raw_input("-->")
+        return [int(console_in1), int(console_in2)]
     
 
 class RandomPlayer(Player):
