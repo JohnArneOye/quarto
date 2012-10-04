@@ -208,13 +208,18 @@ class NovicePlayer(Player):
     #Avoids selecting pieces which will give a win to opponent
     #Puts a piece if winning position if possible
     def __init__(self, game):
-        Player.__init__(self, game)
+        self.game = game
         
     def select_piece(self):
         return Player.select_piece(self)
     
     def select_position(self):
         return Player.select_position(self)
+    
+    #method that simulates 1 ply down the game for each piece possible to pick, and refrains from picking a piece
+    #which can give a winning position to the opponent 
+    def check_1_ply(self):
+        return True
     
     
 class Minimax3Player(Player):
@@ -260,6 +265,18 @@ class MonteCarloPlayer(Player):
     def select_position(self):
         return Player.select_position(self)
    
+class MonteCarloMinimaxPlayer(Player):
+    #combines the techniques of montecarlo playing and minimax analasysis
+    
+    def __init__(self, game):
+        Player.__init__(self, game)
+        
+    def select_piece(self):
+        return Player.select_piece(self)
+    
+    def select_position(self):
+        return Player.select_position(self)
+    
 
 #pieces unstarred.starred unbracketed.bracketed small.big red.blue
 PIECES = {
