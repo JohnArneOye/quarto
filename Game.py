@@ -1,14 +1,15 @@
 
 import random
+import copy
 
 class Game:
     
     #represents the quqarto board?
     #represents the boardstate using bitstrings
     
-    def __init__(self, board=[]):
+    def __init__(self):
         #Initiate the board with empty spaces
-        self.board = board
+        self.board = []
         self.board.append([0b00000000, 0b00000000, 0b00000000, 0b00000000])
         self.board.append([0b00000000, 0b00000000, 0b00000000, 0b00000000])
         self.board.append([0b00000000, 0b00000000, 0b00000000, 0b00000000])
@@ -17,18 +18,25 @@ class Game:
         self.remaining_pieces = PIECES.keys()
         self.remaining_pieces.pop(0)
         
-#        self.remaining_positions = [[0,1]]
-        
+        #instanciate the lists of pssible positions
+        self.remaining_positions = []
+        for i in range(0,4):
+            for j in range(0,4):
+                self.remaining_positions.append([i,j])
+                      
         self.horizontal_win = False
         self.vertical_win = False
         self.diagonal_win = False
         
-        self.players = []
+        self.players = [RandomPlayer(self), RandomPlayer(self)]
         self.player_to_pick = 0
         self.player_to_place = 1
         
-    def add_player(self, player):
-        self.players.append(player)
+    def set_player_one(self, player):
+        self.players[0] = player
+        
+    def set_player_two(self, player):
+        self.players[1] = player
         
     def print_board(self):
         print "  1   2   3   4" #x pos
@@ -49,7 +57,7 @@ class Game:
             remaining_pieces_string += str(PIECES[i]).rjust(5)
         print remaining_pieces_string
         
-    #winning checker, returns true if this state is a terminal state
+    #winning checker, returns the index of winning line if this state is a terminal state
     def terminal_state(self):
         for i in range(0,4):
             line = self.board[i]
@@ -77,6 +85,9 @@ class Game:
             return True
         return False
     
+    def clear_position(self, x, y):
+        self.board[y][x] = 0b00000000
+    
     def take_piece(self, piece_index):
         if self.remaining_pieces[piece_index]:
             self.remaining_pieces.pop(piece_index)
@@ -84,12 +95,13 @@ class Game:
         return False
 
     def play(self):
-        self.player_selection()
+#        self.player_selection()
         self.print_board()
         while(len(self.remaining_pieces)>0):
             #Player 1 selects piece from the pool
             self.print_pieces()
             piece_index = self.players[self.player_to_pick].select_piece()
+            print piece_index
             piece = self.remaining_pieces[piece_index]
             while not self.take_piece(piece_index):
                 print "Error: Player is an idiot: Piece does not exist!"
@@ -99,11 +111,15 @@ class Game:
             
             self.print_board()
             #Player 2 selects where to put the piece
-            position = self.players[self.player_to_place].select_position()
+            position_index = self.players[self.player_to_place].select_position(piece)
+            position = self.remaining_positions[position_index]
             while not self.place_piece(position[0], position[1], piece):
                 print "Error: Player is an idiot: The position is taken!"
-                position = self.players[self.player_to_place].select_position()
+                position_index = self.players[self.player_to_place].select_position(piece)
+                position = self.remaining_positions[position_index]
+                print str(position)
             print "Player " +str(self.player_to_place+1)+ " places it in position " +str(position[0]+1)+ "," +str(position[1]+1)
+            self.remaining_positions.pop(position_index)
             self.print_board()
             
             #Check for a winner
@@ -124,10 +140,7 @@ class Game:
             print "Winner: Player "+str(self.player_to_place+1)
             print "Horizontal="+str(self.horizontal_win)+" Vertical="+str(self.vertical_win)+" Diagonal="+str(self.diagonal_win)
             print "Line "+str(winning_position)
-        print " "
-        print "NEW GAME? (y/n)"
-        if raw_input("-->") == 'y':
-            Game().play()
+        return self.player_to_place+1
                
         
     #prompts input from console to select level of players
@@ -142,7 +155,7 @@ class Game:
                   4: Minimax4Player(self),
                   5: HumanPlayer(self)
                   }[level]
-        self.add_player(player1)
+        self.set_player_one(player1)
         
         print "Select level of player 2:"
         print "1: Randomizing Player. 2: Novice Player. 3: Minmax3 Player. 4: Minimax4 Player. 5: Human Player."
@@ -154,7 +167,7 @@ class Game:
                   4: Minimax4Player(self),
                   5: HumanPlayer(self)
                   }[level]
-        self.add_player(player2)
+        self.set_player_two(player2)
         
         
             
@@ -168,7 +181,7 @@ class Player:
     def select_piece(self):
         return 0
     
-    def select_position(self):
+    def select_position(self, piece):
         return [0,0]
 
 class HumanPlayer(Player):
@@ -182,13 +195,13 @@ class HumanPlayer(Player):
         return int(console_in)-1
             
     
-    def select_position(self):
+    def select_position(self, piece):
         print "Select x position for piece:"
         console_in1 = raw_input("-->")
     
         print "Select y position for piece:"
         console_in2 = raw_input("-->")
-        return [int(console_in1)-1, int(console_in2)-1]
+        return self.game.remaining_positions.index([int(console_in1)-1, int(console_in2)-1])
     
 
 class RandomPlayer(Player):
@@ -198,12 +211,13 @@ class RandomPlayer(Player):
         self.game = game
         
     def select_piece(self):
-        return random.randrange(0, len(game.remaining_pieces)+1)-1
+        return random.randrange(0, len(self.game.remaining_pieces))
         
-    def select_position(self):
-        return [random.randrange(0,4), random.randrange(0,4)]
+    def select_position(self, piece):
+        return random.randrange(0,len(self.game.remaining_positions))
+    
 
-class NovicePlayer(Player):
+class NovicePlayer(RandomPlayer):
     #Plays randomly
     #Avoids selecting pieces which will give a win to opponent
     #Puts a piece if winning position if possible
@@ -211,15 +225,45 @@ class NovicePlayer(Player):
         self.game = game
         
     def select_piece(self):
-        return Player.select_piece(self)
+        piece_list = self.check_1_piece_ply()
+        if len(piece_list) > 0:
+            return self.game.remaining_pieces.index(piece_list[random.randrange(0,len(piece_list))])
+        return random.randrange(0,len(self.game.remaining_pieces))
     
-    def select_position(self):
-        return Player.select_position(self)
+    def select_position(self, piece):
+        position = self.check_1_position_ply(piece)
+        if position == False:
+            return random.randrange(0,len(self.game.remaining_positions))
+        return self.game.remaining_positions.index(position)
     
-    #method that simulates 1 ply down the game for each piece possible to pick, and refrains from picking a piece
-    #which can give a winning position to the opponent 
-    def check_1_ply(self):
-        return True
+    #method that simulates 1 ply down the game for each piece possible to pick
+    #returns the list of remaining pieces, with these pieces removed
+    def check_1_piece_ply(self):
+        sim_game = copy.deepcopy(self.game)
+        revised_piece_list = copy.copy(sim_game.remaining_pieces)
+        for i in sim_game.remaining_pieces:
+            for j in sim_game.remaining_positions:
+                sim_game.place_piece(j[0], j[1], i)
+                if sim_game.terminal_state() != False:
+                    revised_piece_list.remove(i)
+                    print revised_piece_list
+                    sim_game.clear_position(j[0], j[1])
+                    break
+                sim_game.clear_position(j[0], j[1])
+                
+        return revised_piece_list
+    
+    #simulates the game 1 ply down for each possible position to pick for the given piece
+    #return the position of a winning position if there exists one
+    def check_1_position_ply(self, piece):
+        sim_game = copy.deepcopy(self.game)
+        for i in sim_game.remaining_positions:
+            sim_game.place_piece(i[0], i[1], piece)
+            if not sim_game.terminal_state() == False:
+                return i
+            sim_game.clear_position(i[0], i[1])
+            
+        return False
     
     
 class Minimax3Player(Player):
@@ -231,7 +275,7 @@ class Minimax3Player(Player):
     def select_piece(self):
         return Player.select_piece(self)
     
-    def select_position(self):
+    def select_position(self, piece):
         return Player.select_position(self)
     
  
@@ -246,24 +290,31 @@ class Minimax4Player(Player):
     def select_piece(self):
         return Player.select_piece(self)
     
-    def select_position(self):
+    def select_position(self, piece):
         return Player.select_position(self)
     
     
 
-class MonteCarloPlayer(Player):
+class MonteCarloPlayer(NovicePlayer):
+    #plays like a novice player for the first 
     #for each possible piece selection/placing given a game state:
     #simulates 1000k rounds of game
     #chooses the move which statistically has highest probability of winning
     
     def __init__(self, game):
-        Player.__init__(self, game)
-        
+        self.game = game
+     
     def select_piece(self):
-        return Player.select_piece(self)
+        if len(self.game.remaining_pieces) > 12:
+            return super(MonteCarloPlayer, self).select_piece()
+        
+        return self.simulate_piece_selection()
     
-    def select_position(self):
-        return Player.select_position(self)
+    def select_position(self, piece):
+        if len(self.game.remaining_positions) > 12:
+            return super(MonteCarloPlayer, self).select_position(piece)
+        return self.simulate_position_selection(piece)
+
    
 class MonteCarloMinimaxPlayer(Player):
     #combines the techniques of montecarlo playing and minimax analasysis
@@ -274,8 +325,22 @@ class MonteCarloMinimaxPlayer(Player):
     def select_piece(self):
         return Player.select_piece(self)
     
-    def select_position(self):
+    def select_position(self, piece):
         return Player.select_position(self)
+    
+    
+class RemotePlayer(Player):
+    #gets information on moves from a remote player using a TCP socket server and stuff
+    
+    def __init__(self, game):
+        Player.__init__(self, game)
+        
+    def select_piece(self):
+        return Player.select_piece(self)
+    
+    def select_position(self, piece):
+        return Player.select_position(self)
+    
     
 
 #pieces unstarred.starred unbracketed.bracketed small.big red.blue
@@ -300,19 +365,25 @@ PIECES = {
           }
                  
 if __name__ == "__main__":
-#    game = Game()
-#    
-#    game.place_piece(1, 4, 0b10101001)   
-#    game.place_piece(2, 3, 0b10100101)  
-#    game.place_piece(3, 2, 0b10010101)   
-#    game.place_piece(4, 1, 0b01101001)
-#    game.print_board()
-#    
-#    print game.terminal_state()
-#    
-#    game.player_selection()
-#    print game.players
-
-    game = Game()
-#    print game.remaining_positions
-    game.play()
+#
+#    player = NovicePlayer()
+#    player.check_1_piece_ply()
+    winning_stats = [0, 0]
+    for i in range(0, 100):
+        game = Game()
+        game.set_player_one(NovicePlayer(game))
+        game.set_player_two(RandomPlayer(game))
+        winner = game.play()
+        print "Winner: Player "+str(winner)
+        winning_stats[winner-1] += 1
+    print winning_stats
+        
+    
+#    while(True):
+#        print " "
+#        print "NEW GAME? (y/n)"
+#        if raw_input("-->") == 'y':
+#            game = Game()
+#            game.play()
+#        else:
+#            break
