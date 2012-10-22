@@ -351,7 +351,7 @@ class RemotePlayer(Player):
     
     def __init__(self, game):
         self.tcp = TCP("127.0.0.1", "5005")
-        self.game.players[0].set_connection(tcp)
+        self.game.players[0].set_connection(self.tcp)
         
     def select_piece(self):
         data = self.tcp.receive_piece()
