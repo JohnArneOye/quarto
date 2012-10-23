@@ -173,17 +173,6 @@ class Game:
             
 
 
-class Player:
-    #Abstract player class
-    def __init__(self, game):
-        self.game = game
-        
-    def select_piece(self):
-        return 0
-    
-    def select_position(self, piece):
-        return [0,0]
-
 class HumanPlayer(Player):
     #Plays based on input through console
     def __init__(self, game):
@@ -204,66 +193,6 @@ class HumanPlayer(Player):
         return self.game.remaining_positions.index([int(console_in1)-1, int(console_in2)-1])
     
 
-class RandomPlayer(Player):
-    #Plays randomly all the way!
-    #Humpty Dumpty sat on a wall!
-    def __init__(self, game):
-        self.game = game
-        
-    def select_piece(self):
-        return random.randrange(0, len(self.game.remaining_pieces))
-        
-    def select_position(self, piece):
-        return random.randrange(0,len(self.game.remaining_positions))
-    
-
-class NovicePlayer(RandomPlayer):
-    #Plays randomly
-    #Avoids selecting pieces which will give a win to opponent
-    #Puts a piece if winning position if possible
-    def __init__(self, game):
-        self.game = game
-        
-    def select_piece(self):
-        piece_list = self.check_1_piece_ply()
-        if len(piece_list) > 0:
-            return self.game.remaining_pieces.index(piece_list[random.randrange(0,len(piece_list))])
-        return random.randrange(0,len(self.game.remaining_pieces))
-    
-    def select_position(self, piece):
-        position = self.check_1_position_ply(piece)
-        if position == False:
-            return random.randrange(0,len(self.game.remaining_positions))
-        return self.game.remaining_positions.index(position)
-    
-    #method that simulates 1 ply down the game for each piece possible to pick
-    #returns the list of remaining pieces, with these pieces removed
-    def check_1_piece_ply(self):
-        sim_game = copy.deepcopy(self.game)
-        revised_piece_list = copy.copy(sim_game.remaining_pieces)
-        for i in sim_game.remaining_pieces:
-            for j in sim_game.remaining_positions:
-                sim_game.place_piece(j[0], j[1], i)
-                if sim_game.terminal_state() != False:
-                    revised_piece_list.remove(i)
-                    print revised_piece_list
-                    sim_game.clear_position(j[0], j[1])
-                    break
-                sim_game.clear_position(j[0], j[1])
-                
-        return revised_piece_list
-    
-    #simulates the game 1 ply down for each possible position to pick for the given piece
-    #return the position of a winning position if there exists one
-    def check_1_position_ply(self, piece):
-        sim_game = copy.deepcopy(self.game)
-        for i in sim_game.remaining_positions:
-            sim_game.place_piece(i[0], i[1], piece)
-            if not sim_game.terminal_state() == False:
-                return i
-            sim_game.clear_position(i[0], i[1])
-            
-        return False
     
     
 class Minimax3Player(Player):
@@ -371,8 +300,8 @@ if __name__ == "__main__":
     winning_stats = [0, 0]
     for i in range(0, 100):
         game = Game()
-        game.set_player_one(NovicePlayer(game))
-        game.set_player_two(RandomPlayer(game))
+        game.set_player_two(NovicePlayer(game))
+        game.set_player_one(MinimaxPlayer(game))
         winner = game.play()
         print "Winner: Player "+str(winner)
         winning_stats[winner-1] += 1
