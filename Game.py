@@ -1,6 +1,8 @@
 
 import random
 import copy
+import TCP
+from test.test_wait3 import Wait3Test
 
 class Game:
     
@@ -200,10 +202,12 @@ class Minimax3Player(Player):
     #chooses winning move if possible
     def __init__(self, game):
         Player.__init__(self, game)
-        
+       
+    #return the piece index of the piece to be placed as it is in the game.remaining_pieces list 
     def select_piece(self):
         return Player.select_piece(self)
     
+    #return the position index of the position to be placed in as it is in the game.remaining_positions list
     def select_position(self, piece):
         return Player.select_position(self)
     
@@ -212,20 +216,35 @@ class Minimax3Player(Player):
 class Minimax4Player(Player):
     #Searches through the tree of game states with a depth of 4
     #chooses winning move if possible
-    
     def __init__(self, game):
         Player.__init__(self, game)
         
     def select_piece(self):
-        return Player.select_piece(self)
+        #TODO
+        #find the piece we wantz to uze
+        piece = 0b00000000
+        if(self.is_connected):  #send the piece through TCP if the other agent is a remote agent
+            self.tcp.send_piece(piece)
+            
+        return piece
     
     def select_position(self, piece):
-        return Player.select_position(self)
+        #TODO
+        #find position we want!
+        position = [0,0]
+        if(self.is_connected):
+            self.tcp.send_position(position)
+            
+        return position
     
+    def set_connection(self, tcp):
+        self.tcp = tcp
+        self.is_connected = True
+        
     
 
 class MonteCarloPlayer(NovicePlayer):
-    #plays like a novice player for the first 
+    #IMPLEMENT IF WE WANT TO, not necessary/mandatory/obligatory/mandatory
     #for each possible piece selection/placing given a game state:
     #simulates 1000k rounds of game
     #chooses the move which statistically has highest probability of winning
@@ -234,9 +253,6 @@ class MonteCarloPlayer(NovicePlayer):
         self.game = game
      
     def select_piece(self):
-        if len(self.game.remaining_pieces) > 12:
-            return super(MonteCarloPlayer, self).select_piece()
-        
         return self.simulate_piece_selection()
     
     def select_position(self, piece):
@@ -246,8 +262,8 @@ class MonteCarloPlayer(NovicePlayer):
 
    
 class MonteCarloMinimaxPlayer(Player):
+    #IF WE WANT TO IMPLEMENT IT, we don't need to, not compulsory/mandatory/obligatory
     #combines the techniques of montecarlo playing and minimax analasysis
-    
     def __init__(self, game):
         Player.__init__(self, game)
         
@@ -260,15 +276,23 @@ class MonteCarloMinimaxPlayer(Player):
     
 class RemotePlayer(Player):
     #gets information on moves from a remote player using a TCP socket server and stuff
+    #needs to be player 2 in the game
     
     def __init__(self, game):
-        Player.__init__(self, game)
+        self.tcp = TCP("127.0.0.1", "5005")
+        self.game.players[0].set_connection(self.tcp)
         
     def select_piece(self):
-        return Player.select_piece(self)
+        data = self.tcp.receive_piece()
+        while data == None:
+            print "No data received"
+        return int(data)
     
     def select_position(self, piece):
-        return Player.select_position(self)
+        data = self.tcp.receive_position()
+        while data == None:
+            print "No data received"
+        return int(data)
     
     
 
